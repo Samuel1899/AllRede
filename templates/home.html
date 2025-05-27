@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>AllRede - Home</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Variáveis de cores */
+        :root {
+            --primary-color: #08213b; /* Azul marinho escuro */
+            --secondary-color: #6c757d;
+            --background-light: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-dark: #333333;
+            --text-muted: #666666;
+            --border-color: #dee2e6;
+            --shadow-light: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            background-color: var(--background-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-dark);
+        }
+
+        .navbar {
+            background-color: var(--card-bg) !important;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px var(--shadow-light);
+        }
+        .navbar-brand {
+            color: var(--primary-color) !important;
+            font-weight: bold;
+            font-size: 1.8rem;
+        }
+        .navbar-nav .nav-link {
+            color: var(--text-dark) !important;
+            font-weight: 500;
+            margin-left: 15px;
+        }
+        .navbar-nav .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+
+        /* Estilo específico para o botão de logout dentro do nav */
+        .navbar-nav .nav-item form .nav-link {
+            /* Copia os estilos do .nav-link padrão para o botão */
+            background: none;
+            border: none;
+            padding: var(--bs-nav-link-padding-y) var(--bs-nav-link-padding-x); /* Usa variáveis do Bootstrap */
+            cursor: pointer;
+            color: var(--text-dark) !important;
+            font-weight: 500;
+            margin-left: 15px;
+            transition: color 0.2s ease-in-out;
+        }
+        .navbar-nav .nav-item form .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+
+
+        .main-content {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .left-sidebar, .right-sidebar, .center-content {
+            padding: 20px;
+            border-radius: 12px;
+            background-color: var(--card-bg);
+            box-shadow: 0 4px 12px var(--shadow-light);
+        }
+        .left-sidebar {
+            width: 280px;
+            height: fit-content;
+            position: sticky;
+            top: 80px;
+        }
+        .right-sidebar {
+            width: 320px;
+            height: fit-content;
+            position: sticky;
+            top: 80px;
+        }
+        .center-content {
+            flex-grow: 1;
+            max-width: 650px;
+        }
+
+        .sidebar-heading {
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .sidebar-list .list-unstyled li a {
+            display: flex; /* Para alinhar ícone e texto */
+            align-items: center;
+            padding: 8px 0;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: color 0.2s ease-in-out;
+        }
+        .sidebar-list .list-unstyled li a i {
+            margin-right: 10px; /* Espaço entre ícone e texto */
+            color: var(--secondary-color); /* Cor para os ícones */
+        }
+        .sidebar-list .list-unstyled li a:hover {
+            color: var(--primary-color);
+        }
+        .sidebar-list .list-unstyled li a:hover i {
+            color: var(--primary-color);
+        }
+        .sidebar-list .list-unstyled li a img.rounded-circle {
+            margin-right: 10px; /* Espaço entre avatar e nome */
+        }
+
+
+        .post-form {
+            margin-bottom: 30px;
+            padding: 25px;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px var(--shadow-light);
+        }
+        .post-form h3 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        .post-form textarea, .post-form input[type="text"] {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 15px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .post-form button {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            font-weight: bold;
+            padding: 10px 25px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .post-form button:hover {
+            background-color: #051426; /* Um tom mais escuro no hover */
+            border-color: #051426;
+        }
+
+
+        .post-card {
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px var(--shadow-light);
+            background-color: var(--card-bg);
+            overflow: hidden;
+        }
+        .post-card .card-body {
+            padding: 25px;
+        }
+        .post-card .card-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+        .post-card .card-text {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+        .post-card .post-image {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 15px;
+            object-fit: cover;
+        }
+        .post-card .text-muted {
+            font-size: 0.85rem;
+            color: var(--text-muted) !important;
+            margin-top: 15px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .btn-primary:hover {
+            background-color: #051426;
+            border-color: #051426;
+        }
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #545b62;
+        }
+        .errorlist {
+            color: #dc3545; /* Vermelho Bootstrap para erros */
+            list-style: none;
+            padding: 0;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            font-size: 0.875rem;
+            text-align: left;
+        }
+        .errorlist li {
+            margin-bottom: 5px;
+        }
+        .post-form form p {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .post-form form p label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .post-form form input[type="file"] {
+            display: block; /* Garante que o input de arquivo não seja inline */
+            margin-top: 5px;
+        }
+        .post-actions {
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-end; /* Alinha os botões à direita */
+            gap: 10px; /* Espaçamento entre os botões */
+        }
+        .btn-delete {
+            background-color: #dc3545; /* Cor vermelha para deletar */
+            border-color: #dc3545;
+        }
+        .btn-delete:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+
+        /* Estilos para o perfil pequeno na sidebar direita */
+        .sidebar-profile {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .sidebar-profile .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 2px solid var(--primary-color);
+        }
+        .sidebar-profile .info strong {
+            display: block;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+        .sidebar-profile .info small {
+            color: var(--text-muted);
+        }
+
+    </style>
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">AllRede</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'profile' %}">Perfil ({{ user.username }})</a>
+                        </li>
+                        <li class="nav-item">
+                            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="nav-link">Sair</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Entrar</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}">Registrar</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container main-content">
+        <div class="left-sidebar d-none d-md-block">
+            {% if user.is_authenticated %}
+                <div class="sidebar-profile">
+                    {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}" alt="Avatar do Usuário" class="avatar">
+                    {% else %}
+                        <img src="https://via.placeholder.com/50/08213b/ffffff?text={{ user.username|first|upper }}" alt="Avatar Padrão" class="avatar">
+                    {% endif %}
+                    <div class="info">
+                        <strong>{{ user.username }}</strong>
+                        <small>Ver Perfil</small>
+                    </div>
+                </div>
+            {% endif %}
+
+            <h4 class="sidebar-heading">Navegação</h4>
+            <ul class="list-unstyled sidebar-list">
+                <li><a href="{% url 'home' %}"><i class="fas fa-home"></i> Feed de Notícias</a></li>
+                <li><a href="{% url 'profile' %}"><i class="fas fa-user"></i> Meu Perfil</a></li>
+                <li><a href="#"><i class="fas fa-envelope"></i> Mensagens</a></li> {# Exemplo de novo item #}
+                <li><a href="#"><i class="fas fa-bell"></i> Notificações</a></li> {# Exemplo de novo item #}
+            </ul>
+
+            <h4 class="mt-4 sidebar-heading">Descobrir</h4>
+            <ul class="list-unstyled sidebar-list">
+                <li><a href="#"><i class="fas fa-users"></i> Grupos</a></li>
+                <li><a href="#"><i class="fas fa-calendar-alt"></i> Eventos</a></li>
+                <li><a href="#"><i class="fas fa-flag"></i> Páginas</a></li>
+                <li><a href="#"><i class="fas fa-hashtag"></i> Tendências</a></li> {# Exemplo de novo item #}
+            </ul>
+        </div>
+
+        <div class="center-content">
+                <h1 class="text-center mb-4 d-none d-lg-block">Seu Feed Principal</h1>
+
+                {% if user.is_authenticated %}
+                    <div class="post-form">
+                        <h3>O que você quer compartilhar, {{ user.username }}?</h3>
+                        <form method="POST" action="{% url 'home' %}" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {% for field in form %}
+                                <p>
+                                    {{ field.label_tag }}
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <small class="text-muted">{{ field.help_text }}</small>
+                                    {% endif %} {# AQUI ESTAVA FALTANDO UM ENDIF #}
+                                    {% for error in field.errors %}
+                                        <span class="errorlist">{{ error }}</span>
+                                    {% endfor %}
+                                </p>
+                            {% endfor %}
+                            {% if form.non_field_errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.non_field_errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary mt-3">Publicar Post</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <p class="text-center lead alert alert-info">
+                        Faça <a href="{% url 'login' %}">login</a> ou <a href="{% url 'register' %}">registre-se</a> para ver e criar posts!
+                    </p>
+                {% endif %}
+
+                <h2 class="mt-5 mb-4 text-center">Últimos Posts</h2>
+
+                {% if posts %}
+                    {% for post in posts %}
+                    <div class="card post-card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ post.title }}</h5>
+                            <p class="card-text">{{ post.content }}</p>
+                            {% if post.image %}
+                                <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-image img-fluid">
+                            {% endif %}
+                            <p class="text-muted mt-2">Publicado por <strong>{{ post.author.username }}</strong> em {{ post.created_at|date:"d/m/Y H:i" }}</p>
+
+                            {% if user.is_authenticated and post.author == user %}
+                                <div class="post-actions">
+                                    <a href="#" class="btn btn-sm btn-secondary">Editar</a>
+                                    <form action="{% url 'delete_post' post.id %}" method="post" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-delete" onclick="return confirm('Tem certeza que deseja deletar este post?');">Deletar</button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-center alert alert-warning">Nenhum post ainda. Seja o primeiro a criar um!</p>
+                {% endif %}
+        </div>
+
+        <div class="right-sidebar d-none d-lg-block">
+            <h4 class="sidebar-heading">Amigos Online</h4>
+            <ul class="list-unstyled sidebar-list">
+                {# Loop pelos amigos que você passou no contexto da view. Para teste, estamos usando 'suggested_friends' #}
+                {% if suggested_friends %}
+                    {% for friend in suggested_friends %}
+                        <li>
+                            <a href="#" class="text-decoration-none d-flex align-items-center">
+                                {% if friend.avatar %}
+                                    <img src="{{ friend.avatar.url }}" alt="{{ friend.username }}" class="rounded-circle me-2" style="width: 24px; height: 24px; object-fit: cover;">
+                                {% else %}
+                                    <img src="https://via.placeholder.com/24/08213b/ffffff?text={{ friend.username|first|upper }}" alt="Avatar Padrão" class="rounded-circle me-2" style="width: 24px; height: 24px; object-fit: cover;">
+                                {% endif %}
+                                {{ friend.username }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <li>Nenhum amigo para mostrar.</li>
+                {% endif %}
+            </ul>
+
+            <h4 class="mt-4 sidebar-heading">Pessoas que você talvez conheça</h4>
+            <ul class="list-unstyled sidebar-list">
+                {# Para teste, reutilizando suggested_friends, mas idealmente seria outra lógica #}
+                {% if suggested_friends %}
+                    {% for person in suggested_friends %}
+                        <li>
+                            <a href="#" class="text-decoration-none d-flex align-items-center">
+                                {% if person.avatar %}
+                                    <img src="{{ person.avatar.url }}" alt="{{ person.username }}" class="rounded-circle me-2" style="width: 24px; height: 24px; object-fit: cover;">
+                                {% else %}
+                                    <img src="https://via.placeholder.com/24/08213b/ffffff?text={{ person.username|first|upper }}" alt="Avatar Padrão" class="rounded-circle me-2" style="width: 24px; height: 24px; object-fit: cover;">
+                                {% endif %}
+                                {{ person.username }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <li>Nenhuma sugestão.</li>
+                {% endif %}
+            </ul>
+
+            <h4 class="mt-4 sidebar-heading">Patrocinado</h4>
+            <div class="alert alert-light text-center">
+                <p class="mb-0 text-muted">Anúncio de exemplo aqui.</p>
+                <small class="text-primary">Saiba mais</small>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
