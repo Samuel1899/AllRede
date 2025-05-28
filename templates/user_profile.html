@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>AllRede - Perfil de {{ user_to_view.username }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Mantenha os mesmos estilos do seu profile.html e home.html aqui */
+        :root {
+            --primary-color: #08213b;
+            --secondary-color: #6c757d;
+            --background-light: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-dark: #333333;
+            --text-muted: #666666;
+            --border-color: #dee2e6;
+            --shadow-light: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            background-color: var(--background-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-dark);
+        }
+
+        .navbar {
+            background-color: var(--card-bg) !important;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px var(--shadow-light);
+        }
+        .navbar-brand {
+            color: var(--primary-color) !important;
+            font-weight: bold;
+            font-size: 1.8rem;
+        }
+        .navbar-nav .nav-link {
+            color: var(--text-dark) !important;
+            font-weight: 500;
+            margin-left: 15px;
+        }
+        .navbar-nav .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+        .navbar-nav .nav-item form .nav-link {
+            background: none;
+            border: none;
+            padding: var(--bs-nav-link-padding-y) var(--bs-nav-link-padding-x);
+            cursor: pointer;
+            color: var(--text-dark) !important;
+            font-weight: 500;
+            margin-left: 15px;
+            transition: color 0.2s ease-in-out;
+        }
+        .navbar-nav .nav-item form .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+
+        .profile-container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px var(--shadow-light);
+            padding: 30px;
+            margin-top: 50px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+        }
+
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .profile-info h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .profile-info p {
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .edit-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--text-dark);
+            text-align: left;
+        }
+        .edit-form input[type="file"],
+        .edit-form textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        .edit-form button {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            font-weight: bold;
+            padding: 10px 25px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .edit-form button:hover {
+            background-color: #051426;
+            border-color: #051426;
+        }
+        .errorlist {
+            color: #dc3545;
+            list-style: none;
+            padding: 0;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            font-size: 0.875rem;
+            text-align: left;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">AllRede</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'profile' %}">Perfil ({{ user.username }})</a>
+                        </li>
+                        <li class="nav-item">
+                            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="nav-link">Sair</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Entrar</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}">Registrar</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container profile-container">
+        <div class="profile-header">
+            {% if user_to_view.avatar %}
+                <img src="{{ user_to_view.avatar.url }}" alt="Avatar de {{ user_to_view.username }}" class="profile-avatar">
+            {% else %}
+                <img src="https://via.placeholder.com/150/08213b/ffffff?text={{ user_to_view.username|first|upper }}" alt="Avatar Padrão" class="profile-avatar">
+            {% endif %}
+            <div class="profile-info">
+                <h1>{{ user_to_view.username }}</h1>
+                <p><strong>Email:</strong> {{ user_to_view.email }}</p>
+                {% if user_to_view.bio %}
+                    <p><strong>Bio:</strong> {{ user_to_view.bio }}</p>
+                {% else %}
+                    <p class="text-muted">Nenhuma biografia definida ainda.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Mostrar o formulário de edição SOMENTE se for o perfil do usuário logado #}
+        {% if user_to_view == user %}
+            <hr class="my-4">
+            <h3 class="mb-4 text-center" style="color: var(--primary-color);">Editar Meu Perfil</h3>
+            <form method="post" enctype="multipart/form-data" class="edit-form">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% if field.errors %}
+                            <ul class="errorlist">
+                                {% for error in field.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+            </form>
+        {% endif %}
+
+        {# Você pode adicionar posts do usuário aqui se quiser #}
+        {# Ex: Crie uma view que retorne os posts de um usuário específico #}
+        {# Ou adicione user_to_view.post_set.all no contexto se houver posts #}
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
