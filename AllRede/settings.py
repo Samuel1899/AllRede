@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'accounts',
     'posts',
     'comments',
+    'friends',
     'drf_spectacular',
 ]
 

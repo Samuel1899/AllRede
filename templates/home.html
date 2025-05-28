@@ -1,3 +1,4 @@
+{# templates/home.html #}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -74,12 +75,22 @@
 
         .sidebar-list li {
             margin-bottom: 10px;
+            display: flex; /* Para alinhar o avatar, nome e botão */
+            align-items: center;
+            flex-wrap: wrap; /* Para permitir quebrar em linha no mobile */
         }
+        .sidebar-list li:last-child {
+            margin-bottom: 0;
+        }
+
 
         .sidebar-list a {
             color: var(--text-dark);
             text-decoration: none;
             font-weight: 500;
+            display: flex; /* Para alinhar avatar e nome */
+            align-items: center;
+            flex-grow: 1; /* Para ocupar o espaço disponível */
         }
 
         .sidebar-list a:hover {
@@ -270,6 +281,9 @@
                             <a class="nav-link" href="{% url 'profile' %}">Perfil ({{ user.username }})</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="{% url 'friend_list' %}"><i class="fas fa-user-friends"></i> Amigos</a>
+                        </li>
+                        <li class="nav-item">
                             <form action="{% url 'logout' %}" method="post" style="display: inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="nav-link">Sair</button>
@@ -289,6 +303,16 @@
     </nav>
 
     <div class="container mt-4">
+        {# Exibição de Mensagens do Django (success, info, warning, error) #}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
         <div class="row">
             {# Coluna da Esquerda (Perfil e Navegação) #}
             <div class="col-md-3">
@@ -308,6 +332,7 @@
                         <ul>
                             <li><a href="{% url 'home' %}"><i class="fas fa-home"></i> Feed de Notícias</a></li>
                             <li><a href="{% url 'profile' %}"><i class="fas fa-user"></i> Meu Perfil</a></li>
+                            <li><a href="{% url 'friend_list' %}"><i class="fas fa-user-friends"></i> Amigos</a></li>
                             <li><a href="#"><i class="fas fa-envelope"></i> Mensagens</a></li>
                             <li><a href="#"><i class="fas fa-bell"></i> Notificações</a></li>
                         </ul>
@@ -370,7 +395,6 @@
                                     {% if user.is_authenticated %}
                                         <form action="{% url 'like_post' post_id=post_data.post.id %}" method="post" style="display: inline;">
                                             {% csrf_token %}
-                                            {# AQUI ESTÁ A MUDANÇA PRINCIPAL: Usando a nova variável 'user_has_liked' #}
                                             <button type="submit" class="btn btn-link p-0 border-0" style="color: {% if post_data.user_has_liked %}red{% else %}grey{% endif %}; font-size: 1.2rem;">
                                                 <i class="fas fa-heart"></i>
                                             </button>
@@ -450,23 +474,50 @@
                                 </li>
                             {% endfor %}
                         {% else %}
-                            <li>Nenhum amigo para mostrar.</li>
+                            <li>Nenhum amigo online para mostrar.</li>
                         {% endif %}
                     </ul>
 
                     <h4 class="mt-4 sidebar-heading">Pessoas que você talvez conheça</h4>
                     <ul class="list-unstyled sidebar-list">
                         {% if suggested_friends %}
-                            {% for person in suggested_friends %}
+                            {% for suggestion in suggested_friends %} {# 'suggestion' é um dicionário: {'user': user_obj, 'status': '...', 'request_id': ...} #}
                                 <li>
-                                    <a href="{% url 'user_profile' username=person.username %}" class="text-decoration-none d-flex align-items-center">
-                                        {% if person.avatar %}
-                                            <img src="{{ person.avatar.url }}" alt="{{ person.username }}" class="rounded-circle profile-avatar-small">
+                                    <a href="{% url 'user_profile' username=suggestion.user.username %}" class="text-decoration-none d-flex align-items-center">
+                                        {% if suggestion.user.avatar %}
+                                            <img src="{{ suggestion.user.avatar.url }}" alt="{{ suggestion.user.username }}" class="rounded-circle profile-avatar-small">
                                         {% else %}
-                                            <img src="https://via.placeholder.com/24/08213b/ffffff?text={{ person.username|first|upper }}" alt="Avatar Padrão" class="rounded-circle profile-avatar-small">
+                                            <img src="https://via.placeholder.com/24/08213b/ffffff?text={{ suggestion.user.username|first|upper }}" alt="Avatar Padrão" class="rounded-circle profile-avatar-small">
                                         {% endif %}
-                                        {{ person.username }}
+                                        <span class="flex-grow-1">{{ suggestion.user.username }}</span>
                                     </a>
+                                    {# BOTÕES DE AÇÃO BASEADOS NO STATUS DA AMIZADE #}
+                                    {% if user.is_authenticated and user != suggestion.user %}
+                                        {% if suggestion.status == 'not_friends' %}
+                                            <form action="{% url 'send_friend_request' user_id=suggestion.user.id %}" method="post" class="ms-auto">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-primary">Adicionar</button>
+                                            </form>
+                                        {% elif suggestion.status == 'sent_request' %}
+                                            <form action="{% url 'cancel_friend_request' request_id=suggestion.request_id %}" method="post" class="ms-auto">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-warning">Cancelar</button>
+                                            </form>
+                                        {% elif suggestion.status == 'received_request' %}
+                                            <div class="ms-auto d-flex gap-1">
+                                                <form action="{% url 'accept_friend_request' request_id=suggestion.request_id %}" method="post">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-success">Aceitar</button>
+                                                </form>
+                                                <form action="{% url 'decline_friend_request' request_id=suggestion.request_id %}" method="post">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-danger">Recusar</button>
+                                                </form>
+                                            </div>
+                                        {% elif suggestion.status == 'friends' %}
+                                            <span class="badge bg-success ms-auto">Amigos</span>
+                                        {% endif %}
+                                    {% endif %}
                                 </li>
                             {% endfor %}
                         {% else %}

@@ -1,47 +1,39 @@
 # AllRede/urls.py
+
 from django.contrib import admin
 from django.urls import path, include
-from drf_spectacular.views import (
-    SpectacularAPIView,
-    SpectacularSwaggerView,
-    SpectacularRedocView,
-)
-
-from posts.views_html import post_list_create_view as home_view
-
 from django.conf import settings
 from django.conf.urls.static import static
 
-from django.contrib import admin
-from django.urls import path, include
-from django.conf import settings # Importe settings
-from django.conf.urls.static import static # Importe static
+# Importe suas views dos apps correspondentes
+from accounts.views import profile_view # Assumindo que profile_view está em accounts.views
+from posts.views_html import (
+    post_list_create_view,
+    delete_post,
+    add_comment_to_post,
+    like_post,
+    user_profile_view # <-- Importe user_profile_view daqui, se ela estiver em posts.views_html
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/', include('accounts.urls_html')), # Inclua as URLs do seu app accounts
+    path('comments/', include('comments.urls')), # Se você tiver URLs para comments
+    path('friends/', include('friends.urls')),   # <-- Adicione as URLs do app friends
 
-    path('', home_view, name='home'),
+    # URLs do seu app posts (ajuste conforme a organização real das suas views)
+    path('', post_list_create_view, name='home'),
+    path('posts/<int:post_id>/delete/', delete_post, name='delete_post'),
+    path('posts/<int:post_id>/comment/', add_comment_to_post, name='add_comment_to_post'),
+    path('posts/<int:post_id>/like/', like_post, name='like_post'),
 
-    path('accounts/', include('accounts.urls_html')),
+    # URL para perfil de outros usuários (usando o username)
+    path('profile/<str:username>/', user_profile_view, name='user_profile'),
 
-    # Inclui as URLs HTML de posts (onde está o delete_post)
-    path('posts/', include('posts.urls_html')),
-
-    path('api/accounts/', include('accounts.urls_api')),
-
-    path('api/posts/', include('posts.urls_api')),
-
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    # Sua URL de perfil existente para o usuário logado (geralmente sem username no path)
+    path('profile/', profile_view, name='profile'),
 ]
 
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('accounts/', include('accounts.urls_html')), # Suas URLs de autenticação
-    path('', include('posts.urls_html')), # Suas URLs de posts
-]
-
+# Configuração para servir arquivos de mídia em desenvolvimento
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

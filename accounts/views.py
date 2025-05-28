@@ -113,3 +113,28 @@ def user_profile_view(request, username):
         'is_own_profile': request.user == user_to_view # Variável para controle no template
     }
     return render(request, 'user_profile.html', context) # Renderiza o template para outros perfis
+
+@login_required
+def user_profile_view(request, username):
+    profile_user = get_object_or_404(CustomUser, username=username)
+    user_posts = Post.objects.filter(author=profile_user).order_by('-created_at')
+
+    friendship_status = get_friendship_status(request.user, profile_user)
+    request_id = None
+
+    if friendship_status == 'sent_request':
+        req = FriendRequest.objects.filter(from_user=request.user, to_user=profile_user, is_active=True).first()
+        if req:
+            request_id = req.id
+    elif friendship_status == 'received_request':
+        req = FriendRequest.objects.filter(from_user=profile_user, to_user=request.user, is_active=True).first()
+        if req:
+            request_id = req.id
+
+    context = {
+        'profile_user': profile_user,
+        'user_posts': user_posts,
+        'friendship_status': friendship_status,
+        'request_id': request_id, # Passa o ID da solicitação aqui
+    }
+    return render(request, 'accounts/user_profile.html', context)

@@ -1,12 +1,13 @@
+{# templates/accounts/user_profile.html #}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>AllRede - Perfil de {{ user_to_view.username }}</title>
+    <title>Perfil de {{ profile_user.username }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Mantenha os mesmos estilos do seu profile.html e home.html aqui */
+        /* Reutilize seus estilos CSS existentes */
         :root {
             --primary-color: #08213b;
             --secondary-color: #6c757d;
@@ -56,79 +57,97 @@
             color: var(--primary-color) !important;
         }
 
-        .profile-container {
+        .profile-header {
             background-color: var(--card-bg);
             border-radius: 12px;
             box-shadow: 0 4px 12px var(--shadow-light);
             padding: 30px;
-            margin-top: 50px;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
             text-align: center;
+            margin-bottom: 20px;
         }
-
         .profile-avatar {
             width: 150px;
             height: 150px;
             border-radius: 50%;
             object-fit: cover;
-            border: 4px solid var(--primary-color);
+            border: 5px solid var(--primary-color);
             margin-bottom: 20px;
         }
-
-        .profile-info h1 {
+        .profile-header h2 {
             color: var(--primary-color);
             margin-bottom: 10px;
         }
-
-        .profile-info p {
+        .profile-header p {
             color: var(--text-muted);
             margin-bottom: 20px;
-            font-size: 1.1rem;
+        }
+        .profile-actions button, .profile-actions a {
+            margin: 0 5px;
         }
 
-        .edit-form label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: var(--text-dark);
-            text-align: left;
+        .post-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px var(--shadow-light);
+            margin-bottom: 20px;
+            padding: 20px;
         }
-        .edit-form input[type="file"],
-        .edit-form textarea {
-            width: 100%;
+
+        .post-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .comments-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .comment-item {
+            background-color: var(--background-light);
+            border-radius: 8px;
             padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-sizing: border-box;
-        }
-        .edit-form button {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-            font-weight: bold;
-            padding: 10px 25px;
-            border-radius: 8px;
-            transition: background-color 0.2s ease-in-out;
-        }
-        .edit-form button:hover {
-            background-color: #051426;
-            border-color: #051426;
-        }
-        .errorlist {
-            color: #dc3545;
-            list-style: none;
-            padding: 0;
-            margin-top: 5px;
             margin-bottom: 10px;
-            font-size: 0.875rem;
-            text-align: left;
+        }
+
+        .comment-item small {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .comment-item p {
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+
+        .comments-section form textarea {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            font-size: 0.9rem;
+        }
+        .comments-section form button {
+            font-size: 0.9rem;
+            padding: 6px 12px;
+            border-radius: 6px;
+        }
+
+        .btn-delete {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+        .btn-delete:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
         }
     </style>
 </head>
-<body class="bg-light">
-
+<body>
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="{% url 'home' %}">AllRede</a>
@@ -140,6 +159,9 @@
                     {% if user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'profile' %}">Perfil ({{ user.username }})</a>
+                        </li>
+                         <li class="nav-item">
+                            <a class="nav-link" href="{% url 'friend_list' %}"><i class="fas fa-user-friends"></i> Amigos</a>
                         </li>
                         <li class="nav-item">
                             <form action="{% url 'logout' %}" method="post" style="display: inline;">
@@ -160,54 +182,79 @@
         </div>
     </nav>
 
-    <div class="container profile-container">
+    <div class="container mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
         <div class="profile-header">
-            {% if user_to_view.avatar %}
-                <img src="{{ user_to_view.avatar.url }}" alt="Avatar de {{ user_to_view.username }}" class="profile-avatar">
+            {% if profile_user.avatar %}
+                <img src="{{ profile_user.avatar.url }}" alt="Avatar de {{ profile_user.username }}" class="profile-avatar">
             {% else %}
-                <img src="https://via.placeholder.com/150/08213b/ffffff?text={{ user_to_view.username|first|upper }}" alt="Avatar Padrão" class="profile-avatar">
+                <img src="https://via.placeholder.com/150/08213b/ffffff?text={{ profile_user.username|first|upper }}" alt="Avatar Padrão" class="profile-avatar">
             {% endif %}
-            <div class="profile-info">
-                <h1>{{ user_to_view.username }}</h1>
-                <p><strong>Email:</strong> {{ user_to_view.email }}</p>
-                {% if user_to_view.bio %}
-                    <p><strong>Bio:</strong> {{ user_to_view.bio }}</p>
-                {% else %}
-                    <p class="text-muted">Nenhuma biografia definida ainda.</p>
+            <h2>{{ profile_user.username }}</h2>
+            <p>{{ profile_user.bio|default:"Nenhuma biografia disponível." }}</p>
+
+            <div class="profile-actions">
+                {# BOTÕES DE AMIZADE AQUI #}
+                {% if user.is_authenticated and user != profile_user %}
+                    {% if friendship_status == 'not_friends' %}
+                        <form action="{% url 'send_friend_request' user_id=profile_user.id %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus"></i> Adicionar Amigo</button>
+                        </form>
+                    {% elif friendship_status == 'sent_request' %}
+                        <form action="{% url 'cancel_friend_request' request_id=request_id %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-warning"><i class="fas fa-times-circle"></i> Cancelar Solicitação</button>
+                        </form>
+                    {% elif friendship_status == 'received_request' %}
+                        <form action="{% url 'accept_friend_request' request_id=request_id %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success"><i class="fas fa-check-circle"></i> Aceitar Solicitação</button>
+                        </form>
+                        <form action="{% url 'decline_friend_request' request_id=request_id %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger"><i class="fas fa-times-circle"></i> Recusar Solicitação</button>
+                        </form>
+                    {% elif friendship_status == 'friends' %}
+                        <span class="btn btn-secondary"><i class="fas fa-user-friends"></i> Amigos</span>
+                        {# Você pode adicionar um botão para "Desfazer Amizade" aqui se quiser #}
+                        {# Exemplo: <form action="{% url 'remove_friend' friend_id=profile_user.id %}" method="post" style="display: inline;"> {% csrf_token %} <button type="submit" class="btn btn-danger">Desfazer Amizade</button> </form> #}
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
 
-        {# Mostrar o formulário de edição SOMENTE se for o perfil do usuário logado #}
-        {% if user_to_view == user %}
-            <hr class="my-4">
-            <h3 class="mb-4 text-center" style="color: var(--primary-color);">Editar Meu Perfil</h3>
-            <form method="post" enctype="multipart/form-data" class="edit-form">
-                {% csrf_token %}
-                {% for field in form %}
-                    <div class="mb-3">
-                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.help_text %}
-                            <small class="form-text text-muted">{{ field.help_text }}</small>
+        <h3>Posts de {{ profile_user.username }}</h3>
+        {% if user_posts %}
+            {% for post in user_posts %}
+                <div class="card post-card">
+                    <div class="card-body">
+                        <h5 class="card-title" style="color: var(--primary-color);">{{ post.title }}</h5>
+                        <p class="card-text">{{ post.content }}</p>
+                        {% if post.image %}
+                            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-image img-fluid">
                         {% endif %}
-                        {% if field.errors %}
-                            <ul class="errorlist">
-                                {% for error in field.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
+                        <p class="text-muted mt-2">
+                            Publicado em {{ post.created_at|date:"d/m/Y H:i" }}
+                        </p>
+                        {# Para exibir o status de like do usuário logado para os posts do perfil, #}
+                        {# você precisaria passar a mesma lógica de `user_has_liked` para cada post #}
+                        {# na `user_profile_view`, assim como em `post_list_create_view`. #}
+                        <span class="ms-1 text-muted"><i class="fas fa-heart" style="color: grey; font-size: 1.2rem;"></i> {{ post.likes.count }}</span>
                     </div>
-                {% endfor %}
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-            </form>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-center text-muted">{{ profile_user.username }} ainda não publicou nenhum post.</p>
         {% endif %}
-
-        {# Você pode adicionar posts do usuário aqui se quiser #}
-        {# Ex: Crie uma view que retorne os posts de um usuário específico #}
-        {# Ou adicione user_to_view.post_set.all no contexto se houver posts #}
-
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

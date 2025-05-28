@@ -1,73 +1,105 @@
 # posts/views_html.py
 
-# Importações necessárias
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden # Para a view delete_post
+from django.http import HttpResponseForbidden
+from django.contrib import messages # Para mensagens de feedback
 
-# Importações dos modelos e formulários dos seus apps
-from .models import Post, Like # Importe Post e Like
-from .forms import PostForm # Importe o PostForm
-from comments.forms import CommentForm # Importe o CommentForm
-from comments.models import Comment # Importe o modelo Comment
-from accounts.models import CustomUser # Importe CustomUser para sugestões de amigos
+from .models import Post, Like
+from .forms import PostForm
+from comments.forms import CommentForm
+from comments.models import Comment
+from accounts.models import CustomUser
 
-# =====================================================================
-# Views HTML
-# =====================================================================
+# Importe a função auxiliar de amizade do seu novo app 'friends'
+from friends.models import Friendship, FriendRequest # Importe os modelos de amizade
+from friends.views import get_friendship_status # Importe a função que calcula o status
 
 @login_required
 def post_list_create_view(request):
     """
-    View para listar todos os posts e permitir a criação de novos posts.
-    Também prepara dados para comentários e likes.
+    View para listar todos os posts no feed e permitir a criação de novos posts.
+    Inclui lógica para status de likes, amigos online e sugestões de amizade.
     """
-    # Lógica para criar um novo post (se o request for POST)
     if request.method == 'POST':
         form = PostForm(request.POST, request.FILES)
         if form.is_valid():
             new_post = form.save(commit=False)
             new_post.author = request.user
             new_post.save()
-            return redirect('home') # Redireciona para a página inicial após criar o post
+            messages.success(request, "Seu post foi publicado com sucesso!")
+            return redirect('home')
+        else:
+            messages.error(request, "Erro ao publicar o post. Verifique os campos.")
     else:
-        form = PostForm() # Instancia um formulário vazio para GET requests
+        form = PostForm()
 
-    # Otimização: pré-carrega os autores dos posts, os autores dos comentários e os usuários dos likes.
-    # Isso reduz o número de consultas ao banco de dados (evita N+1 queries).
+    # Otimização: pré-carrega os autores dos posts, comentários e likes.
     posts = Post.objects.select_related('author').prefetch_related('comments__author', 'likes__user').all().order_by('-created_at')
 
     posts_data_for_template = []
     for post in posts:
-        post_comments = post.comments.all() # Acessa os comentários relacionados ao post
+        post_comments = post.comments.all()
 
-        # Verifica se o usuário logado já curtiu este post
         user_has_liked = False
         if request.user.is_authenticated:
-            # 'post.likes.all()' agora é eficiente devido ao prefetch_related
             user_has_liked = any(like.user == request.user for like in post.likes.all())
 
         posts_data_for_template.append({
             'post': post,
             'comments': post_comments,
-            'comment_form': CommentForm(), # Cada post terá seu próprio formulário de comentário
-            'user_has_liked': user_has_liked, # Informa se o usuário logado curtiu este post
+            'comment_form': CommentForm(),
+            'user_has_liked': user_has_liked,
         })
 
-    # Lógica de sugestão de amigos: Pegando 5 usuários aleatórios que não sejam o logado.
-    # Para que a lista de amigos/sugestões apareça vazia por padrão, defina como []
-    # Se você tiver uma lógica real de amizade, substitua por ela.
-    friends_online = [] # Lista vazia para "Amigos Online"
-    suggested_friends = CustomUser.objects.exclude(id=request.user.id).order_by('?')[:5] # Exemplo de sugestões reais de 5 usuários
+    # Lógica para "Amigos Online" (placeholder por enquanto)
+    # Em um sistema real, isso exigiria rastreamento de atividade do usuário.
+    friends_online = [] # Substitua por uma lógica real de "online" no futuro
+
+    # Lógica para "Pessoas que você talvez conheça"
+    # Excluir o próprio usuário e usuários que já são amigos
+    # E usuários para os quais já existe uma solicitação pendente (enviada ou recebida)
+    current_friends_ids = Friendship.objects.filter(user=request.user).values_list('friend__id', flat=True)
+    pending_requests_ids = FriendRequest.objects.filter(
+        Q(from_user=request.user, is_active=True) | Q(to_user=request.user, is_active=True)
+    ).values_list('from_user__id', flat=True) | FriendRequest.objects.filter(
+        Q(from_user=request.user, is_active=True) | Q(to_user=request.user, is_active=True)
+    ).values_list('to_user__id', flat=True)
+
+
+    suggested_users_raw = CustomUser.objects.exclude(id=request.user.id).exclude(
+        id__in=list(current_friends_ids) + list(pending_requests_ids)
+    ).order_by('?')[:5] # Pega 5 sugestões aleatórias
+
+    suggested_friends_with_status = []
+    for su_user in suggested_users_raw:
+        status = get_friendship_status(request.user, su_user)
+        request_id = None # Inicializa com None
+
+        # Apenas pega o ID da solicitação se houver uma pendente
+        if status == 'sent_request':
+            req = FriendRequest.objects.filter(from_user=request.user, to_user=su_user, is_active=True).first()
+            if req:
+                request_id = req.id
+        elif status == 'received_request':
+            req = FriendRequest.objects.filter(from_user=su_user, to_user=request.user, is_active=True).first()
+            if req:
+                request_id = req.id
+
+        suggested_friends_with_status.append({
+            'user': su_user,
+            'status': status,
+            'request_id': request_id # Passa o ID da solicitação aqui
+        })
+
 
     context = {
-        'form': form, # Formulário para criar novos posts (no topo da página)
-        'posts_data': posts_data_for_template, # Lista de posts com seus comentários, formulários e status de like
-        'friends_online': friends_online,       # Passando lista de amigos online (vazia ou com dados reais)
-        'suggested_friends': suggested_friends, # Passando lista de sugestões de amigos
+        'form': form,
+        'posts_data': posts_data_for_template,
+        'friends_online': friends_online,
+        'suggested_friends': suggested_friends_with_status,
     }
     return render(request, 'home.html', context)
-
 
 @login_required
 def delete_post(request, post_id):
@@ -76,17 +108,17 @@ def delete_post(request, post_id):
     """
     post = get_object_or_404(Post, id=post_id)
 
-    # Garante que apenas o autor do post pode deletá-lo
     if post.author != request.user:
+        messages.error(request, "Você não tem permissão para deletar este post.")
         return HttpResponseForbidden("Você não tem permissão para deletar este post.")
 
     if request.method == 'POST':
         post.delete()
-        return redirect('home') # Redireciona para a home após deletar
+        messages.success(request, "Post deletado com sucesso!")
+        return redirect('home')
 
-    # Se a requisição não for POST, apenas redireciona para a home
+    messages.error(request, "Método de requisição inválido para deletar o post.")
     return redirect('home')
-
 
 @login_required
 def add_comment_to_post(request, post_id):
@@ -102,11 +134,13 @@ def add_comment_to_post(request, post_id):
             comment.post = post
             comment.author = request.user
             comment.save()
-            # Redireciona de volta para a página anterior (feed) ou para a home
+            messages.success(request, "Comentário adicionado com sucesso!")
+            # Redireciona de volta para a página anterior (feed ou perfil do post)
             return redirect(request.META.get('HTTP_REFERER', 'home'))
-    # Se não for um POST válido, ou se o método não for POST, redireciona de volta para a home
-    return redirect('home')
-
+        else:
+            messages.error(request, "Erro ao adicionar o comentário. Verifique o conteúdo.")
+    messages.error(request, "Método de requisição inválido para adicionar comentário.")
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
 
 @login_required
 def like_post(request, post_id):
@@ -116,16 +150,49 @@ def like_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     user = request.user
 
-    # Verifica se o usuário já curtiu este post
-    like_exists = Like.objects.filter(user=user, post=post).exists()
+    if request.method == 'POST':
+        like_exists = Like.objects.filter(user=user, post=post).exists()
 
-    if like_exists:
-        # Se já curtiu, descurte (remove o like)
-        Like.objects.filter(user=user, post=post).delete()
+        if like_exists:
+            Like.objects.filter(user=user, post=post).delete()
+            messages.info(request, "Like removido.")
+        else:
+            Like.objects.create(user=user, post=post)
+            messages.success(request, "Post curtido!")
     else:
-        # Se não curtiu, curta (adiciona o like)
-        Like.objects.create(user=user, post=post)
+        messages.error(request, "Método de requisição inválido para curtir o post.")
 
-    # Redireciona de volta para a página anterior ou para a home
-    # Usar request.META.get('HTTP_REFERER') é útil para voltar de onde veio
     return redirect(request.META.get('HTTP_REFERER', 'home'))
+
+
+@login_required
+def user_profile_view(request, username):
+    """
+    View para exibir o perfil de outro usuário.
+    """
+    profile_user = get_object_or_404(CustomUser, username=username)
+
+    # Obtenha os posts deste usuário
+    user_posts = Post.objects.filter(author=profile_user).order_by('-created_at')
+
+    # Obtenha o status da amizade entre o usuário logado e o usuário do perfil
+    friendship_status = get_friendship_status(request.user, profile_user)
+    request_id = None # Inicializa com None
+
+    # Se houver uma solicitação pendente, pegue o ID dela para os botões de ação
+    if friendship_status == 'sent_request':
+        req = FriendRequest.objects.filter(from_user=request.user, to_user=profile_user, is_active=True).first()
+        if req:
+            request_id = req.id
+    elif friendship_status == 'received_request':
+        req = FriendRequest.objects.filter(from_user=profile_user, to_user=request.user, is_active=True).first()
+        if req:
+            request_id = req.id
+
+    context = {
+        'profile_user': profile_user,
+        'user_posts': user_posts,
+        'friendship_status': friendship_status, # 'friends', 'sent_request', 'received_request', 'not_friends', 'self'
+        'request_id': request_id, # ID da solicitação de amizade pendente (se houver)
+    }
+    return render(request, 'accounts/user_profile.html', context) # Renderiza o template de perfil de usuário
