@@ -364,15 +364,35 @@
                                     Publicado por <a href="{% url 'user_profile' username=post_data.post.author.username %}"><strong>{{ post_data.post.author.username }}</strong></a> em {{ post_data.post.created_at|date:"d/m/Y H:i" }}
                                 </p>
 
-                                {% if user.is_authenticated and post_data.post.author == user %}
-                                    <div class="post-actions">
-                                        <a href="#" class="btn btn-sm btn-secondary">Editar</a>
-                                        <form action="{% url 'delete_post' post_data.post.id %}" method="post" style="display: inline;">
+                                {# Seção de Likes e Ações #}
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    {# Botão de Like #}
+                                    {% if user.is_authenticated %}
+                                        <form action="{% url 'like_post' post_id=post_data.post.id %}" method="post" style="display: inline;">
                                             {% csrf_token %}
-                                            <button type="submit" class="btn btn-sm btn-delete" onclick="return confirm('Tem certeza que deseja deletar este post?');">Deletar</button>
+                                            {# AQUI ESTÁ A MUDANÇA PRINCIPAL: Usando a nova variável 'user_has_liked' #}
+                                            <button type="submit" class="btn btn-link p-0 border-0" style="color: {% if post_data.user_has_liked %}red{% else %}grey{% endif %}; font-size: 1.2rem;">
+                                                <i class="fas fa-heart"></i>
+                                            </button>
+                                            <span class="ms-1 text-muted">{{ post_data.post.likes.count }}</span>
                                         </form>
-                                    </div>
-                                {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">
+                                            <i class="fas fa-heart" style="color: grey; font-size: 1.2rem;"></i> {{ post_data.post.likes.count }}
+                                        </span>
+                                    {% endif %}
+
+                                    {# Ações do Post (Editar/Deletar) #}
+                                    {% if user.is_authenticated and post_data.post.author == user %}
+                                        <div class="post-actions">
+                                            <a href="#" class="btn btn-sm btn-secondary">Editar</a>
+                                            <form action="{% url 'delete_post' post_data.post.id %}" method="post" style="display: inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-delete" onclick="return confirm('Tem certeza que deseja deletar este post?');">Deletar</button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
+                                </div>
 
                                 <hr class="my-3">
 
