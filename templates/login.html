@@ -2,159 +2,103 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>AllRede - Login</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AllRede</title>
     <style>
-        /* Variáveis de cores (consistentes com home.html e profile.html) */
-        :root {
-            --primary-color: #08213b; /* Azul marinho escuro */
-            --secondary-color: #6c757d; /* Cinza */
-            --background-light: #f0f2f5; /* Fundo claro */
-            --card-bg: #ffffff; /* Fundo dos cartões */
-            --text-dark: #333333; /* Texto escuro */
-            --text-muted: #666666; /* Texto suave */
-            --border-color: #dee2e6; /* Cor da borda */
-            --shadow-light: rgba(0, 0, 0, 0.08); /* Sombra leve */
-        }
-
+        /* Estilos básicos para o formulário de login */
         body {
-            background-color: var(--background-light);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: var(--text-dark);
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             min-height: 100vh;
             margin: 0;
         }
-
         .login-container {
-            background-color: var(--card-bg);
-            padding: 40px;
-            border-radius: 12px; /* Cantos mais arredondados */
-            box-shadow: 0 8px 20px var(--shadow-light); /* Sombra mais pronunciada */
-            width: 100%;
-            max-width: 450px; /* Largura um pouco maior */
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             text-align: center;
+            width: 300px;
         }
-
         .login-container h2 {
-            font-size: 2rem;
-            color: var(--primary-color);
-            margin-bottom: 30px;
-            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
         }
-
-        /* Estiliza os campos do formulário Django */
         .login-container form p {
-            margin-bottom: 15px; /* Espaçamento entre os campos */
-            text-align: left; /* Alinha labels à esquerda */
-        }
-        .login-container form p label {
-            display: block; /* Garante que a label fique acima do input */
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-        .login-container form input[type="text"],
-        .login-container form input[type="password"] {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px; /* Cantos arredondados para inputs */
-            box-sizing: border-box;
-            font-size: 1rem;
-            color: var(--text-dark);
-            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
-        .login-container form input[type="text"]:focus,
-        .login-container form input[type="password"]:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.25rem rgba(8, 33, 59, 0.25); /* Sombra de foco azul marinho */
-            outline: none;
-        }
-
-        /* Estiliza o botão de enviar */
-        .btn-login {
-            width: 100%;
-            background-color: var(--primary-color);
-            color: white;
-            padding: 15px;
-            border: none;
-            border-radius: 8px; /* Cantos arredondados para o botão */
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            margin-top: 20px; /* Espaço acima do botão */
-        }
-
-        .btn-login:hover {
-            background-color: #051426; /* Um tom mais escuro no hover */
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Mensagens de erro do Django (estilizadas) */
-        .errorlist {
-            color: #dc3545; /* Vermelho Bootstrap para erros */
-            list-style: none;
-            padding: 0;
-            margin-top: -10px; /* Reduz espaço entre campo e erro */
             margin-bottom: 15px;
-            font-size: 0.875rem;
             text-align: left;
         }
-        .errorlist li {
+        .login-container input[type="text"],
+        .login-container input[type="password"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .login-container button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .login-container button:hover {
+            background-color: #0056b3;
+        }
+        .login-container .errorlist {
+            list-style: none;
+            padding: 0;
+            color: red;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        .login-container .messages {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+        }
+        .login-container .messages li {
+            padding: 10px;
             margin-bottom: 5px;
+            border-radius: 4px;
+            color: white;
+            background-color: #dc3545; /* Cor para erros */
         }
-
-        .register-link {
-            margin-top: 25px;
-            font-size: 1rem;
-            color: var(--text-muted);
-        }
-        .register-link a {
-            color: var(--primary-color);
+        .login-container a {
+            color: #007bff;
             text-decoration: none;
-            font-weight: 600;
-            transition: color 0.2s ease-in-out;
+            margin-top: 10px;
+            display: block;
         }
-        .register-link a:hover {
-            color: #051426;
+        .login-container a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <h2>Entrar na AllRede</h2>
-
-        <form method="POST" action="{% url 'login' %}">
+        <h2>Entrar</h2>
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <form method="post">
             {% csrf_token %}
-            {% for field in form %}
-                <p>
-                    {{ field.label_tag }}
-                    {{ field }}
-                    {% for error in field.errors %}
-                        <span class="errorlist">{{ error }}</span>
-                    {% endfor %}
-                </p>
-            {% endfor %}
-            {% if form.non_field_errors %}
-                <ul class="errorlist">
-                    {% for error in form.non_field_errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-
-            <button type="submit" class="btn-login">Entrar</button>
+            {{ form.as_p }} {# Isso renderiza os campos do formulário (username, password) #}
+            <button type="submit">Entrar</button>
         </form>
-
-        <p class="register-link">
-            Não tem uma conta? <a href="{% url 'register' %}">Registre-se aqui</a>.
-        </p>
+        <p>Não tem uma conta? <a href="{% url 'register' %}">Registre-se aqui</a></p>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

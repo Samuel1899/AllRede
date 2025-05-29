@@ -1,31 +1,32 @@
-# posts/models.py
+# C:\Users\Meu computador\Desktop\AllRede\posts\models.py
+
 from django.db import models
-from django.conf import settings # Para referenciar o modelo de usuário personalizado
+from django.conf import settings # Para referenciar o modelo de usuário (CustomUser)
 
 class Post(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='posts')
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=200, blank=True, null=True)
     content = models.TextField()
-    image = models.ImageField(upload_to='posts_images/', blank=True, null=True)
+    image = models.ImageField(upload_to='post_images/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_posts', blank=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-created_at'] # Ordenar posts por data de criação descendente
 
     def __str__(self):
-        return f'{self.title} by {self.author.username}'
+        return f"Post by {self.author.username} on {self.created_at.strftime('%Y-%m-%d %H:%M')}"
 
-# NOVO MODELO: Like
-class Like(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='likes')
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes')
+# Modelo Comment corrigido com related_name únicos para 'posts'
+class Comment(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='post_app_comments') # related_name único
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='posts_app_comments_by_user') # related_name único
+    content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        # Garante que um usuário só possa dar um like por post
-        unique_together = ('user', 'post')
-        ordering = ['-created_at'] # Likes mais recentes primeiro (opcional)
+        ordering = ['created_at'] # Ordenar comentários por data de criação ascendente
 
     def __str__(self):
-        return f'{self.user.username} liked {self.post.title}'
+        return f"Comment by {self.author.username} on Post ID {self.post.id}"

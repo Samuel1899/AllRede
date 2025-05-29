@@ -3,69 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfil de {{ user_to_view.username }}</title>
+    <title>Perfil de {{ profile_user.username }} - AllRede</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Seus estilos CSS aqui */
+        /* INCLUA AQUI OS MESMOS ESTILOS CSS DO SEU home.html PARA CONSISTÊNCIA */
+        /* Exemplo mínimo: */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             background-color: #f0f2f5;
         }
-        .container {
-            max-width: 800px;
+        .header {
+            background-color: #fff;
+            padding: 15px 20px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            margin: 0;
+            color: #333;
+        }
+        .header .user-info a {
+            text-decoration: none;
+            color: #007bff;
+            margin-left: 15px;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr; /* Coluna esquerda, centro, coluna direita */
+            gap: 20px;
+            max-width: 1200px; /* Largura máxima do layout */
             margin: 20px auto;
+            padding: 0 20px;
+        }
+        .sidebar {
             background-color: #fff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            align-self: start; /* Fixa a sidebar no topo */
         }
-        .profile-header {
+        .center-content {
+            /* Estilos para a área central do perfil */
+        }
+
+        /* Estilos dos cards da sidebar */
+        .sidebar-card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .sidebar-card h3 {
+            margin-top: 0;
+            color: #555;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .sidebar-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-card ul li {
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
         }
-        .profile-header .profile-picture {
-            width: 100px;
-            height: 100px;
+        .sidebar-card ul li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar-card ul li a:hover {
+            color: #007bff;
+        }
+        .sidebar-card .profile-picture-small {
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             object-fit: cover;
-            margin-right: 20px;
+            margin-right: 10px;
         }
-        .profile-info h1 {
-            margin: 0;
-            color: #333;
-        }
-        .profile-info p {
-            color: #666;
-            margin-top: 5px;
-        }
-        .profile-actions button {
-            background-color: #007bff;
-            color: white;
-            padding: 8px 15px;
-            border: none;
+        .sidebar-card .ad-banner {
+            text-align: center;
+            background-color: #f8f9fa;
+            padding: 15px;
             border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        .profile-actions button:hover {
-            background-color: #0056b3;
-        }
-        .profile-actions .btn-danger {
-            background-color: #dc3545;
-        }
-        .profile-actions .btn-danger:hover {
-            background-color: #c82333;
-        }
-        .profile-actions .btn-warning {
-            background-color: #ffc107;
-            color: #333;
-        }
-        .profile-actions .btn-warning:hover {
-            background-color: #e0a800;
+            border: 1px dashed #ccc;
+            color: #666;
         }
         .messages {
             list-style: none;
@@ -82,7 +114,57 @@
         .messages li.error { background-color: #dc3545; }
         .messages li.info { background-color: #17a2b8; }
 
-        /* Estilos de postagens (copie do home.html se desejar um estilo consistente) */
+        /* Estilos específicos para o perfil */
+        .profile-header-card {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        .profile-picture {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+            border: 3px solid #007bff;
+        }
+        .profile-header-card h2 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .profile-header-card p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .profile-actions button {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 0.9em;
+        }
+        .profile-actions button.cancel {
+            background-color: #dc3545;
+        }
+        .profile-actions button:hover {
+            opacity: 0.9;
+        }
+        .posts-section h3 {
+            margin-top: 0;
+            color: #555;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        /* Estilos de postagens (copie também do home.html para consistência) */
         .post {
             background-color: #fff;
             border: 1px solid #ddd;
@@ -117,86 +199,228 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                    <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-
-        <div class="profile-header">
-            {% if user_to_view.avatar %}
-                <img src="{{ user_to_view.avatar.url }}" alt="Foto de Perfil" class="profile-picture">
+    <div class="header">
+        <h1><a href="{% url 'home' %}" style="text-decoration: none; color: #333;">AllRede - Feed de Notícias</a></h1>
+        <div class="user-info">
+            {% if request.user.is_authenticated %}
+                Olá, <a href="{% url 'user_profile' username=request.user.username %}">{{ request.user.username }}</a>
+                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline; font-size: 1em;">Sair</button>
+                </form>
             {% else %}
-                <img src="https://via.placeholder.com/100" alt="Sem Foto" class="profile-picture">
+                <a href="{% url 'login' %}">Entrar</a>
+                <a href="{% url 'register' %}">Registrar</a>
             {% endif %}
-            <div class="profile-info">
-                <h1>{{ user_to_view.username }}</h1>
-                {% if user_to_view.bio %}
-                    <p>{{ user_to_view.bio }}</p>
-                {% else %}
-                    <p>Nenhuma biografia disponível.</p>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="sidebar left-sidebar">
+            <div class="sidebar-card">
+                {% if current_user_profile %}
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        {% if current_user_profile.avatar %}
+                            <img src="{{ current_user_profile.avatar.url }}" alt="Foto de Perfil" class="profile-picture">
+                        {% else %}
+                            <img src="https://via.placeholder.com/100" alt="Sem Foto" class="profile-picture">
+                        {% endif %}
+                        <h3>{{ current_user_profile.username }}</h3>
+                        <a href="{% url 'user_profile' username=current_user_profile.username %}" class="btn btn-primary">Ver Perfil</a>
+                    </div>
                 {% endif %}
 
-                <div class="profile-actions">
-                    {% if request.user.is_authenticated and request.user != user_to_view %}
-                        {% if friend_status == 'not_friends' %}
-                            <form action="{% url 'send_friend_request' user_id=user_to_view.id %}" method="post">
-                                {% csrf_token %}
-                                <button type="submit">Adicionar Amigo</button>
-                            </form>
-                        {% elif friend_status == 'request_sent' %}
-                            <button type="button" disabled>Pedido Enviado</button>
-                            {% elif friend_status == 'request_received' %}
-                            <form action="{% url 'accept_friend_request' request_id=user_to_view.received_friend_requests.all.0.id %}" method="post" style="display: inline;">
-                                {% csrf_token %}
-                                <button type="submit">Aceitar Pedido</button>
-                            </form>
-                            <form action="{% url 'decline_friend_request' request_id=user_to_view.received_friend_requests.all.0.id %}" method="post" style="display: inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn-danger">Recusar Pedido</button>
-                            </form>
-                        {% elif friend_status == 'friends' %}
-                            <button type="button" disabled>Amigos</button>
-                            <form action="{% url 'remove_friend' user_id=user_to_view.id %}" method="post">
-                                {% csrf_token %}
-                                <button type="submit" class="btn-danger">Remover Amigo</button>
-                            </form>
-                        {% endif %}
-                    {% endif %}
-                </div>
+                <h3>Navegação</h3>
+                <ul>
+                    <li><a href="{% url 'home' %}"><i class="fas fa-home"></i> Feed de Notícias</a></li>
+                    <li><a href="{% url 'user_profile' username=request.user.username %}"><i class="fas fa-user"></i> Meu Perfil</a></li>
+                    <li><a href="#"><i class="fas fa-envelope"></i> Mensagens</a></li>
+                    <li><a href="#"><i class="fas fa-bell"></i> Notificações</a></li>
+                    <li><a href="#"><i class="fas fa-compass"></i> Descobrir</a></li>
+                    <li><a href="#"><i class="fas fa-users"></i> Grupos</a></li>
+                    <li><a href="#"><i class="fas fa-calendar-alt"></i> Eventos</a></li>
+                    <li><a href="#"><i class="fas fa-flag"></i> Páginas</a></li>
+                    <li><a href="#"><i class="fas fa-chart-line"></i> Tendências</a></li>
+                </ul>
             </div>
         </div>
 
-        <h2>Publicações de {{ user_to_view.username }}</h2>
-        <div class="posts-list">
-            {% for post in user_posts %}
-                <div class="post">
-                    <div class="post-header">
-                        {% if user_to_view.avatar %}
-                            <img src="{{ user_to_view.avatar.url }}" alt="Foto de Perfil" class="profile-picture-small">
-                        {% else %}
-                            <img src="https://via.placeholder.com/40" alt="Sem Foto" class="profile-picture-small">
+        <div class="center-content">
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <div class="profile-header-card">
+                {% if profile_user.avatar %}
+                    <img src="{{ profile_user.avatar.url }}" alt="Foto de Perfil" class="profile-picture">
+                {% else %}
+                    <img src="https://via.placeholder.com/120" alt="Sem Foto" class="profile-picture">
+                {% endif %}
+                <h2>{{ profile_user.username }}</h2>
+                <p>{{ profile_user.bio|default:"Nenhuma biografia disponível." }}</p>
+
+                <div class="profile-actions">
+                    {% if request.user.is_authenticated and request.user != profile_user %}
+                        {% if friendship_status == 'friends' %}
+                            <form action="{% url 'remove_friend' user_id=profile_user.id %}" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="cancel">Remover Amigo</button>
+                            </form>
+                        {% elif friendship_status == 'request_sent' %}
+                            <button type="button" disabled>Pedido Enviado</button>
+                            {% if request_id %}
+                            <form action="{% url 'cancel_friend_request' request_id=request_id %}" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="cancel">Cancelar Pedido</button>
+                            </form>
+                            {% endif %}
+                        {% elif friendship_status == 'request_received' %}
+                            {% if request_id %}
+                            <form action="{% url 'accept_friend_request' request_id=request_id %}" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit">Aceitar Pedido</button>
+                            </form>
+                            <form action="{% url 'decline_friend_request' request_id=request_id %}" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="cancel">Recusar Pedido</button>
+                            </form>
+                            {% endif %}
+                        {% else %} {# friendship_status == 'not_friends' #}
+                            <form action="{% url 'send_friend_request' user_id=profile_user.id %}" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit">Adicionar Amigo</button>
+                            </form>
                         {% endif %}
-                        <span class="username">{{ user_to_view.username }}</span>
-                        <small style="margin-left: auto;">{{ post.created_at|date:"d M, H:i" }}</small>
-                    </div>
-                    <div class="post-content">
-                        {% if post.title %}
-                            <h3>{{ post.title }}</h3>
-                        {% endif %}
-                        <p>{{ post.content }}</p>
-                        {% if post.image %}
-                            <img src="{{ post.image.url }}" alt="Imagem da Publicação">
-                        {% endif %}
-                    </div>
-                    </div>
-            {% empty %}
-                <p>{{ user_to_view.username }} ainda não fez nenhuma publicação.</p>
-            {% endfor %}
+                    {% elif request.user == profile_user %}
+                        <a href="{% url 'edit_profile' %}" style="background-color: #6c757d; color: white; padding: 8px 15px; border-radius: 5px; text-decoration: none;">Editar Perfil</a>
+                        <button type="button" disabled style="background-color: #ddd;">Suas Configurações</button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="posts-section sidebar-card">
+                <h3>Publicações de {{ profile_user.username }}</h3>
+                {% if user_posts %}
+                    {% for post in user_posts %}
+                        <div class="post">
+                            <div class="post-header">
+                                {% if post.author.avatar %}
+                                    <img src="{{ post.author.avatar.url }}" alt="Foto de Perfil" class="profile-picture-small">
+                                {% else %}
+                                    <img src="https://via.placeholder.com/40" alt="Sem Foto" class="profile-picture-small">
+                                {% endif %}
+                                <a href="{% url 'user_profile' username=post.author.username %}" class="username">{{ post.author.username }}</a>
+                                <small style="margin-left: auto;">{{ post.created_at|date:"d M, H:i" }}</small>
+                            </div>
+                            <div class="post-content">
+                                {% if post.title %}
+                                    <h3>{{ post.title }}</h3>
+                                {% endif %}
+                                <p>{{ post.content }}</p>
+                                {% if post.image %}
+                                    <img src="{{ post.image.url }}" alt="Imagem da Publicação">
+                                {% endif %}
+                            </div>
+                            <div class="post-actions" style="display: flex; justify-content: space-around; margin-top: 10px;">
+                                <form action="{% url 'like_post' post_id=post.id %}" method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" style="color: grey; font-size: 1.2rem; background: none; border: none; cursor: pointer;">
+                                        <i class="fas fa-heart"></i> Curtir ({{ post.likes.count }})
+                                    </button>
+                                </form>
+                                <a href="#" onclick="document.getElementById('comment-form-{{ post.id }}').style.display='block'; return false;" style="color: grey; text-decoration: none; font-size: 1.2rem;"><i class="fas fa-comment"></i> Comentar ({{ post.comment_set.count }})</a>
+                                {% if request.user == post.author %}
+                                <form action="{% url 'delete_post' post_id=post.id %}" method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" style="color: grey; font-size: 1.2rem; background: none; border: none; cursor: pointer;" onclick="return confirm('Tem certeza que deseja excluir esta publicação?');">
+                                        <i class="fas fa-trash"></i> Excluir
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                            <div class="comments-section" id="comment-form-{{ post.id }}" style="display: none; margin-top: 15px;">
+                                <form action="{% url 'add_comment_to_post' post_id=post.id %}" method="post">
+                                    {% csrf_token %}
+                                    <textarea name="content" placeholder="Adicione um comentário..." rows="2" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;"></textarea>
+                                    <button type="submit" style="background-color: #007bff; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer;">Comentar</button>
+                                </form>
+                                <div class="comments-list" style="margin-top: 10px;">
+                                    {% for comment in post.comment_set.all %}
+                                        <div class="comment" style="background-color: #f9f9f9; border-left: 3px solid #eee; padding: 8px; margin-bottom: 5px;">
+                                            <a href="{% url 'user_profile' username=comment.author.username %}" style="font-weight: bold; color: #333; text-decoration: none;">{{ comment.author.username }}</a>: {{ comment.content }}
+                                            <small style="display: block; color: #777;">{{ comment.created_at|date:"d M, H:i" }}</small>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="text-align: center; color: #666;">Nenhuma publicação ainda.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="sidebar right-sidebar">
+            <div class="sidebar-card">
+                <h3>Amigos Online</h3>
+                <ul>
+                    {% if online_friends %}
+                        {% for friend in online_friends %}
+                            <li>
+                                <a href="{% url 'user_profile' username=friend.username %}">
+                                    {% if friend.avatar %}
+                                        <img src="{{ friend.avatar.url }}" alt="Foto de Perfil" class="profile-picture-small">
+                                    {% else %}
+                                        <img src="https://via.placeholder.com/30" alt="Sem Foto" class="profile-picture-small">
+                                    {% endif %}
+                                    {{ friend.username }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <li>Nenhum amigo para mostrar.</li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div class="sidebar-card">
+                <h3>Pessoas que você talvez conheça</h3>
+                <ul>
+                    {% if suggested_friends %}
+                        {% for suggestion in suggested_friends %}
+                            <li>
+                                <a href="{% url 'user_profile' username=suggestion.username %}">
+                                    {% if suggestion.avatar %}
+                                        <img src="{{ suggestion.avatar.url }}" alt="Foto de Perfil" class="profile-picture-small">
+                                    {% else %}
+                                        <img src="https://via.placeholder.com/30" alt="Sem Foto" class="profile-picture-small">
+                                    {% endif %}
+                                    {{ suggestion.username }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <li>Nenhuma sugestão no momento.</li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div class="sidebar-card ad-banner">
+                <h3>Patrocinado</h3>
+                <p>Anúncio de exemplo aqui.</p>
+                <a href="#">Saiba mais</a>
+            </div>
         </div>
     </div>
+
+    <script>
+        // Script para mostrar o nome do arquivo selecionado (se precisar de upload no perfil)
+        // Certifique-se de que IDs e elementos HTML correspondam se você adicionar um formulário de upload aqui
+    </script>
 </body>
 </html>

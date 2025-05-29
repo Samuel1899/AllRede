@@ -1,12 +1,14 @@
-# friends/urls.py
+# C:\Users\Meu computador\Desktop\AllRede\friends\urls.py
 
 from django.urls import path
-from . import views
+# Importe as views de amizade do seu aplicativo 'friends'
+# (assumindo que elas estão em friends/views.py)
+from .views import send_friend_request, accept_friend_request, decline_friend_request, remove_friend
 
 urlpatterns = [
-    path('send-friend-request/<int:user_id>/', views.send_friend_request, name='send_friend_request'),
-    path('accept-friend-request/<int:request_id>/', views.accept_friend_request, name='accept_friend_request'),
-    path('decline-friend-request/<int:request_id>/', views.decline_friend_request, name='decline_friend_request'),
-    path('cancel-friend-request/<int:request_id>/', views.cancel_friend_request, name='cancel_friend_request'),
-    path('remove-friend/<int:user_id>/', views.remove_friend, name='remove_friend'),
+    path('send-request/<int:user_id>/', send_friend_request, name='send_friend_request'),
+    path('accept-request/<int:request_id>/', accept_friend_request, name='accept_friend_request'),
+    path('decline-request/<int:request_id>/', decline_friend_request, name='decline_friend_request'),
+    path('remove/<int:user_id>/', remove_friend, name='remove_friend'),
+    # Adicione outras URLs relacionadas a amizade aqui, se houver
 ]

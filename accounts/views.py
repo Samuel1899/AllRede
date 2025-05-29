@@ -1,140 +1,132 @@
-# accounts/views.py
+# C:\Users\Meu computador\Desktop\AllRede\accounts\views.py
 
-# Importações de Rest Framework (para API)
-from rest_framework import generics
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.authtoken.models import Token
-from rest_framework.response import Response
-
-# Importações do Django (para Views HTML)
-from django.contrib.auth.views import LoginView
-from django.shortcuts import render, redirect, get_object_or_404 # Adicionado get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from django.http import HttpResponseForbidden # Para controle de acesso em delete_post (se for movido para cá, mas está em posts/views_html.py)
+from django.contrib.auth import get_user_model
+User = get_user_model() # Garante que User está sempre definido para uso global no módulo
+from django.contrib import messages
+from django.views.generic import CreateView
+from django.db.models import Q
 
-# Importações dos seus apps
-from .forms import CustomUserCreationForm, UserProfileForm # Importe ambos os formulários
-from .models import CustomUser # Importe seu modelo CustomUser
-from .serializers import RegisterSerializer # Para a API de registro
-from posts.models import Post # Importe o modelo Post para buscar os posts do usuário
+from .forms import CustomUserCreationForm, CustomUserChangeForm
+from posts.models import Post
+from friends.models import Friendship, FriendRequest
 
-# =====================================================================
-# Views da API (geralmente em accounts/views.py ou accounts/api_views.py)
-# =====================================================================
-
-@method_decorator(csrf_exempt, name='dispatch')
-class RegisterAPIView(generics.CreateAPIView):
-    queryset = CustomUser.objects.all()
-    serializer_class = RegisterSerializer
-
-class CustomTokenLoginView(ObtainAuthToken):
-    def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        token = Token.objects.get(key=response.data['token'])
-        return Response({
-            'token': token.key,
-            'username': token.user.username
-        })
-
-# =====================================================================
-# Views HTML (geralmente em accounts/views_html.py ou accounts/views.py)
-# =====================================================================
-
-def register_view(request):
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('login') # Redireciona para a página de login após o registro
-    else:
-        form = CustomUserCreationForm()
-    return render(request, 'register.html', {'form': form})
-
-class CustomLoginView(LoginView):
-    template_name = 'login.html'
-
-@login_required
-def profile_view(request):
-    """
-    View para o perfil do USUÁRIO LOGADO.
-    Permite editar o próprio perfil e exibe seus posts.
-    """
-    # Pega todos os posts do usuário logado, ordenados pelo mais recente
-    user_posts = Post.objects.filter(author=request.user).order_by('-created_at')
-
-    if request.method == 'POST':
-        # O formulário precisa da instância do usuário para preencher os campos existentes
-        # e do request.FILES para lidar com o upload de arquivos (avatar)
-        form = UserProfileForm(request.POST, request.FILES, instance=request.user)
-        if form.is_valid():
-            form.save()
-            return redirect('profile') # Redireciona para o próprio perfil após salvar
-    else:
-        form = UserProfileForm(instance=request.user) # Preenche o formulário com dados do usuário logado
-
-    context = {
-        'user_posts': user_posts,
-        'user': request.user, # O objeto 'user' é o usuário logado
-        'form': form, # O formulário para edição do próprio perfil
-    }
-    return render(request, 'profile.html', context)
-
+# View para registro de usuário (SignUp)
+class SignUpView(CreateView):
+    form_class = CustomUserCreationForm
+    success_url = '/accounts/login/' # Redirecionar para a página de login após o registro (URL completa)
+    template_name = 'registration/register.html' # Ajustado para 'registration/register.html' (assumindo que você moveu 'register.html' para a pasta 'registration' dentro de 'templates')
 
 @login_required
 def user_profile_view(request, username):
-    """
-    View para o perfil de OUTROS USUÁRIOS.
-    Exibe as informações do usuário e seus posts.
-    Permite edição APENAS se o usuário logado for o dono do perfil.
-    """
-    # Tenta buscar o usuário pelo username ou retorna um 404 Not Found
-    user_to_view = get_object_or_404(CustomUser, username=username)
+    # Usar a variável 'User' já definida globalmente, sem chamar get_user_model() novamente
+    user_profile = get_object_or_404(User, username=username)
 
-    # Pega todos os posts do usuário cujo perfil estamos vendo
-    user_to_view_posts = Post.objects.filter(author=user_to_view).order_by('-created_at')
+    # Lógica para saber se o usuário logado é amigo ou tem pedido pendente
+    is_friend = False
+    friend_request_sent = False
+    friend_request_received = False
 
-    form = None # Inicializa o formulário como None
-    # Se o usuário logado for o dono do perfil que está sendo visualizado, permite edição
-    if request.user == user_to_view:
-        if request.method == 'POST':
-            form = UserProfileForm(request.POST, request.FILES, instance=request.user)
-            if form.is_valid():
-                form.save()
-                return redirect('profile') # Redireciona para o próprio perfil (sem o username na URL)
+    if request.user.is_authenticated and request.user != user_profile:
+        # Verifica se já são amigos (bidirecional)
+        if Friendship.objects.filter(
+            Q(user=request.user, friend=user_profile, status='accepted') |
+            Q(user=user_profile, friend=request.user, status='accepted')
+        ).exists():
+            is_friend = True
+
+        # Verifica se o usuário logado já enviou um pedido para este perfil
+        if FriendRequest.objects.filter(from_user=request.user, to_user=user_profile, is_active=True).exists():
+            friend_request_sent = True
+
+        # Verifica se este perfil enviou um pedido para o usuário logado
+        if FriendRequest.objects.filter(from_user=user_profile, to_user=request.user, is_active=True).exists():
+            friend_request_received = True
+
+    # Obter os posts deste usuário
+    user_posts = Post.objects.filter(author=user_profile).order_by('-created_at')
+
+    context = {
+        'user_profile': user_profile,
+        'user_posts': user_posts,
+        'is_friend': is_friend,
+        'friend_request_sent': friend_request_sent,
+        'friend_request_received': friend_request_received,
+    }
+    return render(request, 'accounts/profile_detail.html', context)
+
+
+@login_required
+def edit_profile_view(request):
+    # Usar a variável 'User' já definida globalmente, sem chamar get_user_model() novamente
+    if request.method == 'POST':
+        # Instancie o formulário com os dados POST, arquivos (se houver) e a instância do usuário atual
+        form = CustomUserChangeForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Perfil atualizado com sucesso!")
+            # Redirecione para a página de perfil do usuário, usando o username atualizado
+            return redirect('accounts:user_profile', username=request.user.username) # Usar namespace 'accounts:'
         else:
-            form = UserProfileForm(instance=request.user)
+            messages.error(request, "Erro ao atualizar o perfil. Verifique os campos.")
+    else:
+        # Se for um GET, instancie o formulário com os dados atuais do usuário
+        form = CustomUserChangeForm(instance=request.user)
+    return render(request, 'accounts/edit_profile.html', {'form': form})
 
-    context = {
-        'user_to_view': user_to_view, # O usuário cujo perfil estamos vendo
-        'user_to_view_posts': user_to_view_posts, # Posts desse usuário
-        'form': form, # O formulário (será None se não for o perfil do usuário logado)
-        'is_own_profile': request.user == user_to_view # Variável para controle no template
-    }
-    return render(request, 'user_profile.html', context) # Renderiza o template para outros perfis
+# Views para Amizade (Friendship)
+@login_required
+def send_friend_request(request, user_id):
+    # Usar a variável 'User' já definida globalmente
+    to_user = get_object_or_404(User, id=user_id)
+    if request.user == to_user:
+        messages.error(request, "Você não pode enviar uma solicitação de amizade para si mesmo.")
+    elif FriendRequest.objects.filter(from_user=request.user, to_user=to_user, is_active=True).exists():
+        messages.info(request, "Você já enviou uma solicitação de amizade para este usuário.")
+    elif FriendRequest.objects.filter(from_user=to_user, to_user=request.user, is_active=True).exists():
+        messages.info(request, "Este usuário já enviou uma solicitação de amizade para você. Aceite-a na sua página de amizades.")
+    elif Friendship.objects.filter(Q(user=request.user, friend=to_user, status='accepted') | Q(user=to_user, friend=request.user, status='accepted')).exists():
+        messages.info(request, "Vocês já são amigos.")
+    else:
+        FriendRequest.objects.create(from_user=request.user, to_user=to_user)
+        messages.success(request, f"Solicitação de amizade enviada para {to_user.username}!")
+    return redirect('accounts:user_profile', username=to_user.username) # Usar namespace 'accounts:'
+
 
 @login_required
-def user_profile_view(request, username):
-    profile_user = get_object_or_404(CustomUser, username=username)
-    user_posts = Post.objects.filter(author=profile_user).order_by('-created_at')
+def accept_friend_request(request, request_id):
+    friend_request = get_object_or_404(FriendRequest, id=request_id)
+    if request.user == friend_request.to_user and friend_request.is_active:
+        friend_request.accept() # Isso vai criar a Friendship e desativar a requisição
+        messages.success(request, f"Você aceitou a solicitação de amizade de {friend_request.from_user.username}.")
+    else:
+        messages.error(request, "Você não tem permissão para aceitar esta solicitação ou ela não está ativa.")
+    return redirect('home') # Ou para a página de amizades
 
-    friendship_status = get_friendship_status(request.user, profile_user)
-    request_id = None
 
-    if friendship_status == 'sent_request':
-        req = FriendRequest.objects.filter(from_user=request.user, to_user=profile_user, is_active=True).first()
-        if req:
-            request_id = req.id
-    elif friendship_status == 'received_request':
-        req = FriendRequest.objects.filter(from_user=profile_user, to_user=request.user, is_active=True).first()
-        if req:
-            request_id = req.id
+@login_required
+def decline_friend_request(request, request_id):
+    friend_request = get_object_or_404(FriendRequest, id=request_id)
+    if request.user == friend_request.to_user and friend_request.is_active:
+        friend_request.decline()
+        messages.success(request, f"Você recusou a solicitação de amizade de {friend_request.from_user.username}.")
+    else:
+        messages.error(request, "Você não tem permissão para recusar esta solicitação ou ela não está ativa.")
+    return redirect('home') # Ou para a página de amizades
 
-    context = {
-        'profile_user': profile_user,
-        'user_posts': user_posts,
-        'friendship_status': friendship_status,
-        'request_id': request_id, # Passa o ID da solicitação aqui
-    }
-    return render(request, 'accounts/user_profile.html', context)
+@login_required
+def remove_friend(request, user_id):
+    # Usar a variável 'User' já definida globalmente
+    friend_to_remove = get_object_or_404(User, id=user_id)
+    # Tenta remover a amizade em ambas as direções
+    friendship1 = Friendship.objects.filter(user=request.user, friend=friend_to_remove, status='accepted')
+    friendship2 = Friendship.objects.filter(user=friend_to_remove, friend=request.user, status='accepted')
+
+    if friendship1.exists() or friendship2.exists():
+        friendship1.delete()
+        friendship2.delete()
+        messages.success(request, f"Você removeu {friend_to_remove.username} da sua lista de amigos.")
+    else:
+        messages.error(request, "Vocês não são amigos.")
+    return redirect('accounts:user_profile', username=friend_to_remove.username) # Usar namespace 'accounts:'
