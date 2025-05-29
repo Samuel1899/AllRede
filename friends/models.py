@@ -24,6 +24,7 @@ class FriendRequest(models.Model):
         """
         Aceita a solicitação de amizade e cria o relacionamento de amizade bidirecional.
         """
+        # Cria a amizade bidirecional
         Friendship.objects.create(user=self.from_user, friend=self.to_user)
         Friendship.objects.create(user=self.to_user, friend=self.from_user)
         self.is_active = False # Marca a solicitação como inativa/resolvida
